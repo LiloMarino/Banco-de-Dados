@@ -32,27 +32,20 @@ def populate_table(num_records):
         sexo = random.choice(["M", "F"])
         salario = round(random.uniform(3000.00, 20000.00), 2)
         data_nascimento = fake.date_of_birth(minimum_age=18, maximum_age=65)
-        sup_rg_num = fake.random_int(min=10000000, max=99999999)
-        sup_rg_estado = fake.state_abbr()
-        dept_num_trabalha = fake.random_int(min=1, max=10)
 
         cursor.execute(
             """
-            INSERT INTO empresa.empregado (rg_num, rg_estado, pnome, snome, sexo, salario, data_nascimento, sup_rg_num, sup_rg_estado, dept_num_trabalha)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (rg_num, rg_estado) DO NOTHING
+            INSERT INTO empresa.empregado (rg_num, rg_estado, pnome, snome, salario, sexo, data_nascimento) 
+            VALUES (%s,%s,%s,%s,%s, %s,%s)
         """,
             (
                 rg_num,
                 rg_estado,
                 pnome,
                 snome,
-                sexo,
                 salario,
+                sexo,
                 data_nascimento,
-                sup_rg_num,
-                sup_rg_estado,
-                dept_num_trabalha,
             ),
         )
 
