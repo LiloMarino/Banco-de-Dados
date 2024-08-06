@@ -1,0 +1,13 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "sicm.dc.uel.br",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Dkaster",
+            "database": "murilo",
+            "username": "murilo"
+        }
+    ]
+}
