@@ -9,5 +9,8 @@
             "database": "murilo",
             "username": "murilo"
         }
-    ]
+    ],
+    "markdown-pdf.styles": [
+        ".vscode/custom.css"
+    ],
 }
