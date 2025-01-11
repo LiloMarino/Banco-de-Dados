@@ -1,12 +1,15 @@
-# Relatório Atividade 1
+# Relatório de Atividade 1
 
-**Nome:** Murilo Aldigueri Marino
+**Nome:** Murilo
 
-## Importação e adaptações do banco de dados
+## 1. Importação e Adaptações do Banco de Dados
 
-O banco de dados desenvolvido na disciplina 1COP017 - Bancos de Dados I, foi importado e adaptado para a sintaxe do Oracle Database, com poucas alterações necessárias, exceto por algumas constraints que precisaram ser modificadas. Exemplo:
+O banco de dados, inicialmente desenvolvido para a disciplina 1COP017 - Bancos de Dados I, foi importado e adaptado para a sintaxe do Oracle Database, com poucas modificações, exceto por algumas alterações nas constraints. A seguir, está a adaptação necessária na constraint para a migração do PostgreSQL para o Oracle:
 
-**PostgreSQL**
+### Exemplo de Adaptação de Tabela
+
+**PostgreSQL:**
+
 ```sql
 CREATE TABLE
   IF NOT EXISTS bd_hardware.compras (
@@ -20,7 +23,8 @@ CREATE TABLE
   );
 ```
 
-**Oracle Database**
+**Oracle Database:**
+
 ```sql
 create table compras (
    id_compras  number
@@ -48,5 +52,351 @@ end;
 /
 ```
 
-Em Oracle Database, foi necessário criar um trigger para validar que a data da compra não seja no futuro implementada em Postgres por `chk_data_compra_valida`, pois o Oracle não suporta o uso de valores dinâmicos como SYSDATE em constraints do tipo CHECK. Isso requer o uso de um trigger para garantir que essa regra de negócio seja respeitada.
+**Explicação:**
+Para implementar o `chk_data_compra_valida` no Oracle Database, foi necessário criar um *trigger* para garantir que a data da compra não fosse no futuro. Isso ocorreu porque o Oracle não permite o uso de funções dinâmicas, como o `SYSDATE`, em *constraints* do tipo `CHECK`.
 
+## 2. Carga de Dados Semi-Aleatórios
+
+Foi implementado um procedimento PL/SQL, chamado `carregar_dados`, que insere dados semi-aleatórios nas tabelas do banco de dados. O procedimento recebe um parâmetro de fator de escala para controlar o número de registros inseridos.
+
+### Definição do Procedimento
+
+```sql
+CREATE OR REPLACE PROCEDURE carregar_dados(fator_escala IN NUMBER) IS
+BEGIN
+    -- Inserir dados na tabela cliente
+    FOR i IN 1..(10 * fator_escala) LOOP
+        INSERT INTO cliente (cpf, nome, email, senha)
+        VALUES (
+            LPAD(TO_CHAR(DBMS_RANDOM.VALUE(10000000000, 99999999999)), 11, '0'),
+            'Cliente ' || i,
+            'cliente' || i || '@example.com',
+            DBMS_RANDOM.STRING('A', 8)
+        );
+    END LOOP;
+
+    -- Inserir dados na tabela categoria
+    FOR i IN 1..(5 * fator_escala) LOOP
+        INSERT INTO categoria (nome)
+        VALUES ('Categoria ' || i);
+    END LOOP;
+
+    -- Inserir dados na tabela subcategoria
+    FOR i IN 1..(10 * fator_escala) LOOP
+        INSERT INTO subcategoria (nome, id_categoria)
+        VALUES (
+            'Subcategoria ' || i,
+            MOD(i, 5) + 1 -- Distribuir entre as categorias criadas
+        );
+    END LOOP;
+
+    -- Inserir dados na tabela fabricante
+    FOR i IN 1..(3 * fator_escala) LOOP
+        INSERT INTO fabricante (nome)
+        VALUES ('Fabricante ' || i);
+    END LOOP;
+
+    -- Inserir dados na tabela produtos
+    FOR i IN 1..(20 * fator_escala) LOOP
+        INSERT INTO produtos (nome, preco, quantidade_estoque, id_subcategoria, id_fabricante)
+        VALUES (
+            'Produto ' || i,
+            ROUND(DBMS_RANDOM.VALUE(10, 500), 2),
+            TRUNC(DBMS_RANDOM.VALUE(1, 100)),
+            MOD(i, 10) + 1, -- Distribuir entre as subcategorias criadas
+            MOD(i, 3) + 1 -- Distribuir entre os fabricantes criados
+        );
+    END LOOP;
+
+    -- Inserir dados na tabela compras
+    FOR i IN 1..(15 * fator_escala) LOOP
+        INSERT INTO compras (id_cliente, data_compra, valor_total)
+        VALUES (
+            MOD(i, 10) + 1, -- Distribuir entre os clientes criados
+            TRUNC(SYSDATE - DBMS_RANDOM.VALUE(1, 100)),
+            ROUND(DBMS_RANDOM.VALUE(50, 1500), 2)
+        );
+    END LOOP;
+
+    -- Inserir dados na tabela itens_compra
+    FOR i IN 1..(30 * fator_escala) LOOP
+        INSERT INTO itens_compra (id_compras, id_cliente, id_produtos, quantidade, preco_unitario)
+        VALUES (
+            MOD(i, 15) + 1, -- Distribuir entre as compras criadas
+            MOD(i, 10) + 1, -- Distribuir entre os clientes criados
+            MOD(i, 20) + 1, -- Distribuir entre os produtos criados
+            TRUNC(DBMS_RANDOM.VALUE(1, 5)),
+            ROUND(DBMS_RANDOM.VALUE(10, 500), 2)
+        );
+    END LOOP;
+
+    COMMIT;
+END;
+/
+```
+
+**Execução do Procedimento:**
+
+```sql
+BEGIN
+   carregar_dados(1); -- Invoca o procedimento com fator de escala 1
+END;
+/
+```
+
+O procedimento realiza a inserção de registros nas tabelas `cliente`, `categoria`, `subcategoria`, `fabricante`, `produtos`, `compras` e `itens_compra`, com quantidade proporcional ao fator de escala fornecido.
+
+## 3. Visões Computadas e Materializadas
+
+### Visão Computada: `v_compras_resumo`
+
+Foi criada a visão computada `v_compras_resumo` para exibir um resumo das compras, incluindo informações do cliente, data e valor total.
+
+```sql
+CREATE OR REPLACE VIEW v_compras_resumo AS
+SELECT 
+    c.id_compras,
+    cl.nome AS cliente,
+    c.data_compra,
+    c.valor_total
+FROM 
+    compras c
+JOIN 
+    cliente cl ON c.id_cliente = cl.id_cliente;
+```
+
+Consulta para exibir o resumo das compras nos últimos 30 dias:
+
+```sql
+SELECT * 
+FROM v_compras_resumo 
+WHERE data_compra >= TRUNC(SYSDATE) - 30;
+```
+
+### Visão Materializada: `vm_total_vendas`
+
+A visão materializada `vm_total_vendas` foi criada para calcular o total de vendas por produto, com atualização manual quando necessário.
+
+```sql
+CREATE MATERIALIZED VIEW vm_total_vendas
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT 
+    p.id_produtos,
+    p.nome AS produto,
+    SUM(ic.quantidade * ic.preco_unitario) AS total_vendas
+FROM 
+    produtos p
+JOIN 
+    itens_compra ic ON p.id_produtos = ic.id_produtos
+GROUP BY 
+    p.id_produtos, p.nome;
+```
+
+Para atualizar a visão materializada manualmente:
+
+```sql
+BEGIN
+   DBMS_MVIEW.REFRESH('vm_total_vendas');
+END;
+/
+```
+
+## 4. Utilização de CTE (Common Table Expressions)
+
+### Consulta Não Recursiva
+
+A consulta a seguir calcula o total de vendas por cliente no último mês, utilizando uma CTE para selecionar as compras recentes.
+
+```sql
+WITH compras_recentes AS (
+    SELECT 
+        c.id_cliente,
+        c.valor_total
+    FROM 
+        compras c
+    WHERE 
+        c.data_compra >= TRUNC(SYSDATE) - 30
+)
+SELECT 
+    cr.id_cliente,
+    cl.nome,
+    SUM(cr.valor_total) AS total_vendas
+FROM 
+    compras_recentes cr
+JOIN 
+    cliente cl ON cr.id_cliente = cl.id_cliente
+GROUP BY 
+    cr.id_cliente, cl.nome;
+```
+
+### Consulta Recursiva
+
+A consulta recursiva abaixo explora a hierarquia de categorias e subcategorias, utilizando uma CTE recursiva.
+
+```sql
+WITH RECURSIVE hierarquia_categorias (id_categoria, nome, nivel) AS (
+    SELECT 
+        c.id_categoria,
+        c.nome,
+        1 AS nivel
+    FROM 
+        categoria c
+    WHERE 
+        c.id_categoria NOT IN (SELECT id_categoria_pai FROM subcategoria WHERE id_categoria_pai IS NOT NULL)
+    UNION ALL
+    SELECT 
+        sc.id_categoria,
+        sc.nome,
+        hc.nivel + 1
+    FROM 
+        subcategoria sc
+    JOIN 
+        hierarquia_categorias hc ON sc.id_categoria_pai = hc.id_categoria
+)
+SELECT 
+    id_categoria,
+    nome,
+    nivel
+FROM 
+    hierarquia_categorias
+ORDER BY 
+    nivel, nome;
+```
+
+## 5. Consultas Utilizando Window Functions
+
+### Consulta 1: Total de Vendas Acumulado por Cliente
+
+A consulta calcula o total de vendas acumulado por cliente, ordenado por data de compra:
+
+```sql
+SELECT 
+    c.id_cliente,
+    cl.nome,
+    c.data_compra,
+    c.valor_total,
+    SUM(c.valor_total) OVER (PARTITION BY c.id_cliente ORDER BY c.data_compra) AS total_acumulado
+FROM 
+    compras c
+JOIN 
+    cliente cl ON c.id_cliente = cl.id_cliente
+ORDER BY 
+    c.id_cliente, c.data_compra;
+```
+
+### Consulta 2: Ranking de Produtos por Total de Vendas
+
+Esta consulta classifica os produtos com base no total de vendas, utilizando a função de janela `RANK()`:
+
+```sql
+SELECT 
+    p.id_produtos,
+    p.nome AS produto,
+    f.nome AS fabricante,
+    SUM(ic.quantidade * ic.preco_unitario) AS total_vendas,
+    RANK() OVER (PARTITION BY p.id_fabricante ORDER BY SUM(ic.quantidade * ic.preco_unitario) DESC) AS rank_vendas
+FROM 
+    produtos p
+JOIN 
+    fabricante f ON p.id_fabricante = f.id_fabricante
+JOIN 
+    itens_compra ic ON p.id_produtos = ic.id_produtos
+GROUP BY 
+    p.id_produtos, p.nome, f.nome, p.id_fabricante
+ORDER BY 
+    p.id_fabricante, rank_vendas;
+```
+
+## 6. Função SQL e Consulta Associada
+
+### Função SQL: `media_compras_cliente`
+
+A função `media_compras_cliente` calcula a média das compras de um cliente em um período especificado.
+
+```sql
+CREATE OR REPLACE FUNCTION media_compras_cliente(
+    p_id_cliente IN NUMBER,
+    p_data_inicial IN DATE,
+    p_data_final IN DATE
+) RETURN NUMBER IS
+    v_media NUMBER;
+BEGIN
+    SELECT AVG(valor_total)
+    INTO v_media
+    FROM compras
+    WHERE id_cliente = p_id_cliente
+      AND data_compra BETWEEN p_data_inicial AND p_data_final;
+
+    RETURN v_media;
+END;
+/
+```
+
+### Consulta Utilizando a Função
+
+A consulta a seguir calcula a média das compras de cada cliente no último mês:
+
+```sql
+SELECT 
+    cl.id_cliente,
+    cl.nome,
+    media_compras_cliente(cl.id_cliente, ADD_MONTHS(SYSDATE, -1), SYSDATE) AS media_compras_ultimo_mes
+FROM 
+    cliente cl
+ORDER BY 
+    cl.id_cliente;
+```
+
+## 7. Implementação de Trigger para Atualização Automática e Restrição de Integridade
+
+### Trigger para Atualização Automática do Valor Total
+
+Este trigger atualiza o valor total da compra sempre que há alterações na tabela `itens_compra`.
+
+```sql
+CREATE OR REPLACE TRIGGER atualizar_valor_total_compra
+AFTER INSERT OR UPDATE OR DELETE ON itens_compra
+FOR EACH ROW
+BEGIN
+   UPDATE compras
+   SET valor_total = (
+      SELECT SUM(quantidade * preco_unitario)
+      FROM itens_compra
+      WHERE id_compras = :new.id_compras
+      AND id_cliente = :new.id_cliente
+   )
+   WHERE id_compras = :new.id_compras
+   AND id_cliente = :new.id_cliente;
+END;
+/
+```
+
+### Trigger para Restrição de Integridade
+
+Este trigger verifica se o valor total de uma compra corresponde à soma dos itens e lança uma exceção caso contrário.
+
+```sql
+CREATE OR REPLACE TRIGGER verificar_valor_total
+AFTER INSERT OR UPDATE ON compras
+FOR EACH ROW
+DECLARE
+   soma_itens NUMBER(10, 2);
+BEGIN
+   SELECT SUM(preco_unitario * quantidade)
+   INTO soma_itens
+   FROM itens_compra
+   WHERE id_compras = :new.id_compras
+   AND id_cliente = :new.id_cliente;
+
+   IF soma_itens != :new.valor_total THEN
+      RAISE_APPLICATION_ERROR(
+         -20001,
+         'O valor total informado (' || :new.valor_total || 
+         ') não corresponde à soma dos itens (' || soma_itens || ')'
+      );
+   END IF;
+END;
+/
+```
