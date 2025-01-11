@@ -1,6 +1,6 @@
 # Relatório de Atividade 1
 
-**Nome:** Murilo
+**Nome:** Murilo Aldigueri Marino
 
 ## 1. Importação e Adaptações do Banco de Dados
 
@@ -22,6 +22,7 @@ CREATE TABLE
     CONSTRAINT fk_compras_cliente FOREIGN KEY (id_cliente) REFERENCES bd_hardware.cliente (id_cliente) ON DELETE CASCADE ON UPDATE CASCADE
   );
 ```
+<div class="page" />
 
 **Oracle Database:**
 
@@ -54,6 +55,8 @@ END;
 
 **Explicação:**
 Para implementar o `chk_data_compra_valida` no Oracle Database, foi necessário criar um *trigger* para garantir que a data da compra não fosse no futuro. Isso ocorreu porque o Oracle não permite o uso de funções dinâmicas, como o `SYSDATE`, em *constraints* do tipo `CHECK`.
+
+<div class="page" />
 
 ## 2. Carga de Dados Semi-Aleatórios
 
@@ -146,6 +149,8 @@ END;
 
 O procedimento realiza a inserção de registros nas tabelas `cliente`, `categoria`, `subcategoria`, `fabricante`, `produtos`, `compras` e `itens_compra`, com quantidade proporcional ao fator de escala fornecido.
 
+<div class="page" />
+
 ## 3. Visões Computadas e Materializadas
 
 ### Visão Computada: `v_compras_resumo`
@@ -172,6 +177,8 @@ SELECT *
 FROM v_compras_resumo 
 WHERE data_compra >= TRUNC(SYSDATE) - 30;
 ```
+
+<div class="page" />
 
 ### Visão Materializada: `vm_total_vendas`
 
@@ -208,6 +215,7 @@ Consulta simples:
 ```sql
 SELECT * FROM vm_total_vendas;
 ```
+<div class="page" />
 
 ## 4. Utilização de CTE (Common Table Expressions)
 
@@ -236,6 +244,8 @@ JOIN
 GROUP BY 
     cr.id_cliente, cl.nome;
 ```
+
+<div class="page" />
 
 ### Consulta Recursiva
 
@@ -270,6 +280,8 @@ FROM
 ORDER BY 
     nivel, nome;
 ```
+
+<div class="page" />
 
 ## 5. Consultas Utilizando Window Functions
 
@@ -315,6 +327,8 @@ ORDER BY
     p.id_fabricante, rank_vendas;
 ```
 
+<div class="page" />
+
 ## 6. Função SQL e Consulta Associada
 
 ### Função SQL: `media_compras_cliente`
@@ -355,6 +369,8 @@ ORDER BY
     cl.id_cliente;
 ```
 
+<div class="page" />
+
 ## 7. Implementação de Trigger para Atualização Automática e Restrição de Integridade
 
 ### Trigger para Atualização Automática do Valor Total
@@ -381,6 +397,8 @@ BEGIN
 END;
 /
 ```
+
+<div class="page" />
 
 ### Trigger para Restrição de Integridade
 
