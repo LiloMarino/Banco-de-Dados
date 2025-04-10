@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Relational Algebra Cheat.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+<link rel="stylesheet" href="file:///c%3A/Users/Usuario/Desktop/Faculdade/Banco-de-Dados/.vscode/custom.css" type="text/css">
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<table>
+<thead>
+<tr>
+<th><strong>Operador</strong></th>
+<th><strong>Álgebra Relacional</strong></th>
+<th><strong>SQL Equivalente</strong></th>
+<th><strong>Funcionalidade</strong></th>
+<th><strong>Parâmetros</strong></th>
+<th><strong>Exemplo (Álgebra Relacional)</strong></th>
+<th><strong>Exemplo (SQL)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Seleção (σ)</strong></td>
+<td>σ<sub>condição</sub>(R)</td>
+<td><code>SELECT * FROM R WHERE condição</code></td>
+<td>Filtra tuplas que satisfazem uma condição</td>
+<td><code>condição</code>: condição de filtragem <br> <code>R</code>: relação (tabela)</td>
+<td>σ<sub>idade &gt; 30</sub>(Clientes)</td>
+<td><code>SELECT * FROM Clientes WHERE idade &gt; 30;</code></td>
+</tr>
+<tr>
+<td><strong>Projeção (π)</strong></td>
+<td>π<sub>atributos</sub>(R)</td>
+<td><code>SELECT atributos FROM R</code></td>
+<td>Retorna colunas específicas, eliminando duplicatas</td>
+<td><code>atributos</code>: colunas a selecionar <br> <code>R</code>: relação (tabela)</td>
+<td>π<sub>nome, idade</sub>(Clientes)</td>
+<td><code>SELECT DISTINCT nome, idade FROM Clientes;</code></td>
+</tr>
+<tr>
+<td><strong>Renomeação (ρ)</strong></td>
+<td>ρ<sub>novo_nome</sub>(R)</td>
+<td><code>SELECT * FROM R AS novo_nome</code></td>
+<td>Renomeia a relação ou seus atributos</td>
+<td><code>novo_nome</code>: novo nome para a relação <br> <code>R</code>: relação original</td>
+<td>ρ<sub>C</sub>(Clientes)</td>
+<td><code>SELECT * FROM Clientes AS C;</code></td>
+</tr>
+<tr>
+<td><strong>União (⋃)</strong></td>
+<td>R ⋃ S</td>
+<td><code>SELECT * FROM R UNION SELECT * FROM S</code></td>
+<td>Combina tuplas de duas relações, eliminando duplicatas</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação (mesma estrutura)</td>
+<td>ClientesBrasil ⋃ ClientesEUA</td>
+<td><code>SELECT * FROM ClientesBrasil UNION SELECT * FROM ClientesEUA;</code></td>
+</tr>
+<tr>
+<td><strong>Interseção (∩)</strong></td>
+<td>R ∩ S</td>
+<td><code>SELECT * FROM R INTERSECT SELECT * FROM S</code></td>
+<td>Retorna tuplas que estão em ambas as relações</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação (mesma estrutura)</td>
+<td>ClientesBrasil ∩ ClientesEUA</td>
+<td><code>SELECT * FROM ClientesBrasil INTERSECT SELECT * FROM ClientesEUA;</code></td>
+</tr>
+<tr>
+<td><strong>Diferença (−)</strong></td>
+<td>R − S</td>
+<td><code>SELECT * FROM R EXCEPT SELECT * FROM S</code></td>
+<td>Retorna tuplas de <code>R</code> que não estão em <code>S</code></td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação (mesma estrutura)</td>
+<td>ClientesBrasil − ClientesEUA</td>
+<td><code>SELECT * FROM ClientesBrasil EXCEPT SELECT * FROM ClientesEUA;</code></td>
+</tr>
+<tr>
+<td><strong>Produto Cartesiano (×)</strong></td>
+<td>R × S</td>
+<td><code>SELECT * FROM R, S</code></td>
+<td>Combina todas as tuplas de <code>R</code> com todas as de <code>S</code></td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação</td>
+<td>Clientes × Pedidos</td>
+<td><code>SELECT * FROM Clientes, Pedidos;</code></td>
+</tr>
+<tr>
+<td><strong>Junção Natural (⨝)</strong></td>
+<td>R ⨝ S</td>
+<td><code>SELECT * FROM R NATURAL JOIN S</code></td>
+<td>Combina tuplas de <code>R</code> e <code>S</code> com base em atributos comuns</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação</td>
+<td>Clientes ⨝ Pedidos</td>
+<td><code>SELECT * FROM Clientes NATURAL JOIN Pedidos;</code></td>
+</tr>
+<tr>
+<td><strong>Junção Theta (⨝<sub>θ</sub>)</strong></td>
+<td>R ⨝<sub>θ</sub> S</td>
+<td><code>SELECT * FROM R JOIN S ON θ</code></td>
+<td>Combina tuplas de <code>R</code> e <code>S</code> com uma condição específica</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação <br> <code>θ</code>: condição de junção</td>
+<td>Clientes ⨝<sub>Clientes.cidade = Pedidos.cidade</sub> Pedidos</td>
+<td><code>SELECT * FROM Clientes JOIN Pedidos ON Clientes.cidade = Pedidos.cidade;</code></td>
+</tr>
+<tr>
+<td><strong>Junção Externa Esquerda (⟕)</strong></td>
+<td>R ⟕ S</td>
+<td><code>SELECT * FROM R LEFT JOIN S ON condição</code></td>
+<td>Retorna todas as tuplas de <code>R</code> e tuplas de <code>S</code> que têm correspondência</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação <br> <code>condição</code>: condição de junção</td>
+<td>Clientes ⟕ Pedidos</td>
+<td><code>SELECT * FROM Clientes LEFT JOIN Pedidos ON Clientes.id = Pedidos.cliente_id;</code></td>
+</tr>
+<tr>
+<td><strong>Junção Externa Direita (⟖)</strong></td>
+<td>R ⟖ S</td>
+<td><code>SELECT * FROM R RIGHT JOIN S ON condição</code></td>
+<td>Retorna todas as tuplas de <code>S</code> e tuplas de <code>R</code> que têm correspondência</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação <br> <code>condição</code>: condição de junção</td>
+<td>Clientes ⟖ Pedidos</td>
+<td><code>SELECT * FROM Clientes RIGHT JOIN Pedidos ON Clientes.id = Pedidos.cliente_id;</code></td>
+</tr>
+<tr>
+<td><strong>Junção Externa Completa (⟗)</strong></td>
+<td>R ⟗ S</td>
+<td><code>SELECT * FROM R FULL JOIN S ON condição</code></td>
+<td>Retorna todas as tuplas de <code>R</code> e <code>S</code>, correspondentes ou não</td>
+<td><code>R</code>: primeira relação <br> <code>S</code>: segunda relação <br> <code>condição</code>: condição de junção</td>
+<td>Clientes ⟗ Pedidos</td>
+<td><code>SELECT * FROM Clientes FULL JOIN Pedidos ON Clientes.id = Pedidos.cliente_id;</code></td>
+</tr>
+<tr>
+<td><strong>Divisão (÷)</strong></td>
+<td>R ÷ S</td>
+<td>(Não tem equivalente direto)</td>
+<td>Retorna tuplas de <code>R</code> associadas a todas as de <code>S</code></td>
+<td><code>R</code>: relação com tuplas para dividir <br> <code>S</code>: relação com valores associados</td>
+<td>ClientesProdutos ÷ ProdutosVendidos</td>
+<td><code>SELECT cliente_id FROM Clientes WHERE NOT EXISTS (SELECT 1 FROM Produtos WHERE Produtos.produto_id NOT IN (SELECT produto_id FROM Compras WHERE ...))</code></td>
+</tr>
+<tr>
+<td><strong>Ordenação (τ)</strong></td>
+<td>τ<sub>atributos</sub>(R)</td>
+<td><code>SELECT * FROM R ORDER BY atributos</code></td>
+<td>Ordena as tuplas da relação com base nos atributos especificados</td>
+<td><code>atributos</code>: colunas a ordenar <br> <code>R</code>: relação (tabela)</td>
+<td>τ<sub>idade DESC</sub>(Clientes)</td>
+<td><code>SELECT * FROM Clientes ORDER BY idade DESC;</code></td>
+</tr>
+<tr>
+<td><strong>Agrupamento (γ)</strong></td>
+<td>γ<sub>atributos; função_agregada</sub>(R)</td>
+<td><code>SELECT atributos, função_agregada FROM R GROUP BY atributos</code></td>
+<td>Agrupa tuplas e aplica funções agregadas</td>
+<td><code>atributos</code>: colunas para agrupar <br> <code>função_agregada</code>: função aplicada aos grupos <br> <code>R</code>: relação (tabela)</td>
+<td>γ<sub>cidade; COUNT(*); AVG(idade)</sub>(Clientes)</td>
+<td><code>SELECT cidade, COUNT(*), AVG(idade) FROM Clientes GROUP BY cidade;</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+
+</body>
+</html>
